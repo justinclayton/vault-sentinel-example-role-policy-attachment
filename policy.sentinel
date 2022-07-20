@@ -1,0 +1,24 @@
+# When an approle called "teamname-role" is being created/modified,
+# ensure that each attached policy begins with the prefix "teamname-".
+
+import "strings"
+
+split_and_validate_each_policy = func() {
+  if request.path matches "^auth/approle/role/teamname-role$" {
+    if "policies" in keys(request.data) {
+      policies_list = strings.split(request.data.policies, ",")
+      for policies_list as policy {
+        if policy not matches "^teamname-.+$" {
+          print("One or more policies listed in role do not start with 'teamname-'")
+          return false
+        }
+      }
+    }
+  }
+
+  return true
+}
+
+policies_validated = split_and_validate_each_policy()
+
+main = rule { policies_validated }
